@@ -83,6 +83,7 @@ def crawl(request):
     command = f'npx -y tweet-harvest@2.6.1 -o "{filename}" -s "{keyword}{f" since:{sinceDate}" if sinceDate else ""}{f" until:{untilDate}" if untilDate else ""} lang:id" --tab "LATEST" -l "{limit}" --token "{auth_token}"'
     prcoess_command = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     
+    filename = filename.replace(" ", "_")
     while True:
         baris = prcoess_command.stdout.readline()
         if not baris:
@@ -107,6 +108,6 @@ def crawl(request):
 
         elif "error" in stderr:
             emit("error crawl", stderr, broadcast=True)
-
+    print(filename)
     
     emit("complete crawl", filename, broadcast=True)
