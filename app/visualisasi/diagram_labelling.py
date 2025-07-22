@@ -1,4 +1,6 @@
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from app import IMAGE_PATH
 import uuid
@@ -45,4 +47,5 @@ def diagram_labelling(data):
     # Simpan gambar
     filename = f'diagram_labelling_{uuid.uuid4().hex[:8]}.png'
     plt.savefig(IMAGE_PATH + '/' + filename)
+    plt.close()
     return filename

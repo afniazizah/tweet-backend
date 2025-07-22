@@ -1,4 +1,6 @@
-from matplotlib import pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 from app import IMAGE_PATH
 import uuid
 

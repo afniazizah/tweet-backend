@@ -84,8 +84,11 @@ def crawl(request):
     prcoess_command = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     
     filename = filename.replace(" ", "_")
+    no_more_tweets = False
+    total_tweet = 0
     while True:
         baris = prcoess_command.stdout.readline()
+        print("Output:", baris.strip())
         if not baris:
             break
         if "Total tweets saved" in baris:
@@ -98,16 +101,52 @@ def crawl(request):
         elif "done scrolling" in baris:
             percentCompelte = 100
             emit("update percent", percentCompelte, broadcast=True)
-        print("Output:", baris.strip())
+        elif "No more tweets found" in baris:
+            emit("error crawl", "Tidak ada lagi tweet yang ditemukan. Tweet yang berhasil diambil: " + str(total_tweet), broadcast=True)
+            prcoess_command.kill()
+            if percentCompelte > 0:
+                emit("complete crawl", {
+                    "filename": filename,
+                    "total_tweet": total_tweet
+                }, broadcast=True)
+            return
+        elif "rate limit" in baris:
+            emit("error crawl", "Rate limit terlampaui, Tweet yang berhasil diambil: " + str(total_tweet), broadcast=True)
+            if percentCompelte > 0:
+                emit("complete crawl", {
+                    "filename": filename,
+                    "total_tweet": total_tweet
+                }, broadcast=True)
+            prcoess_command.kill()
+            return
 
     stderr = prcoess_command.stderr.read()
-    if stderr:
+    if stderr or no_more_tweets:
+        print("Masuk Ke Error")
         prcoess_command.kill()
         if "token" in stderr:
-            emit("error crawl", "Auth token tidak valid", broadcast=True)
-
+            emit("error crawl", "Terjadi Kesalahan : Auth token tidak valid", broadcast=True)
         elif "error" in stderr:
-            emit("error crawl", stderr, broadcast=True)
-    print(filename)
+            emit("error crawl", "Terjadi Kesalahan : " + stderr, broadcast=True)
+        elif "No more tweets found" in stderr:
+            emit("error crawl", "Tidak ada lagi tweet yang ditemukan. Tweet yang berhasil diambil: " + str(total_tweet), broadcast=True)
+            if percentCompelte > 0:
+                emit("complete crawl", {
+                    "filename": filename,
+                    "total_tweet": total_tweet
+                }, broadcast=True)
+        elif "rate limit" in stderr:
+            emit("error crawl", "Rate limit terlampaui, Tweet yang berhasil diambil: " + str(total_tweet), broadcast=True)
+            if percentCompelte > 0:
+                emit("complete crawl", {
+                    "filename": filename,
+                    "total_tweet": total_tweet
+                }, broadcast=True)
+        else:
+            emit("error crawl", "Terjadi Kesalahan : " + stderr, broadcast=True)
+        return
     
-    emit("complete crawl", filename, broadcast=True)
+    emit("complete crawl", {
+        "filename": filename,
+                    "total_tweet": total_tweet
+    }, broadcast=True)
