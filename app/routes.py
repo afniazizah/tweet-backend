@@ -16,7 +16,7 @@ def get_image(filename):
 def upload_file():
     print(request)
     if 'file' not in request.files:
-        return jsonify({"error": "Error: Tidak ada file yang diupload"}), 42
+        return jsonify({"error": "Error: Tidak ada file yang diupload"}), 422
     file = request.files['file']
     table_name = request.form.get('table_name')
     try:
