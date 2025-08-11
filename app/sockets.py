@@ -3,13 +3,14 @@ import subprocess
 import random
 import string
 import os
-from app import socketio, emit
+from app import socketio, emit, eventlet
 from app.preprocessing.cleaning import clean_tweet
 from app.preprocessing.casefolding import case_folding_tweet
 from app.preprocessing.tokenizing import tokenizing_tweet
 from app.preprocessing.normalisasi import normalisasi_tweet
 from app.preprocessing.stopwords_removal import stopwords_removal_tweet
 from app.preprocessing.stemming import stemming_tweet
+from app.preprocessing.translate import translate_all
 from app.visualisasi.word_cloud import word_cloud_tweet
 from app.perhitungan.labelling_tweet import labelling_tweet
 from app.visualisasi.diagram_labelling import diagram_labelling
@@ -32,25 +33,40 @@ import time
 # wordCloudFile =  word_cloud_tweet(result_stemming)
 
 @socketio.on("analisis")
-def analisisPerhitungan(filename):
+def analisisPerhitungan(params):
+    filename = params[0]
+    language = params[1]
     st = time.time()
+    if language == "en":
+        emit("update analisis", "Menerjemahkan Tweet.....")
+        eventlet.sleep(0)
+        filename = translate_all(TWEETS_DATA_PATH + '/' + filename)
     emit("update analisis", "Cleaning.....")
+    eventlet.sleep(0) # Non-blocking sleep
     result_cleaning = clean_tweet(TWEETS_DATA_PATH + '/' + filename)
     emit("update analisis", "Case Folding.....")
+    eventlet.sleep(0) # Non-blocking sleep
     result_case_folding = case_folding_tweet(result_cleaning)
     emit("update analisis", "Tokenizing.....")
+    eventlet.sleep(0) # Non-blocking sleep
     result_tokenizing = tokenizing_tweet(result_case_folding)
     emit("update analisis", "Normalisasi.....")
+    eventlet.sleep(0) # Non-blocking sleep
     result_normalisasi = normalisasi_tweet(result_tokenizing)
     emit("update analisis", "Stopwords Removal.....")
+    eventlet.sleep(0) # Non-blocking sleep
     result_stopwords_removal = stopwords_removal_tweet(result_normalisasi)
     emit("update analisis", "Stemming.....")
+    eventlet.sleep(0) # Non-blocking sleep
     result_stemming = stemming_tweet(result_stopwords_removal)
     emit("update analisis", "Labelling.....")
+    eventlet.sleep(0) # Non-blocking sleep
     result_labeling = labelling_tweet(result_stemming)
     print(result_labeling['Sentiment'].value_counts())
     emit("update analisis", "TF-IDF.....")
+    eventlet.sleep(0) # Non-blocking sleep
     emit("update analisis", "Klasifikasi.....")
+    eventlet.sleep(0) # Non-blocking sleep
     result_klasifikasi = klasifikasi_svm(result_labeling)
     emit("update analisis", "Visualisasi.....")
     word_cloud_file = word_cloud_tweet(result_stemming)

@@ -4,6 +4,7 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 import os
 import time
+import eventlet # Import eventlet
 
 # Definisikan path yang bisa diakses di semua file
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -14,7 +15,7 @@ IMAGE_PATH = os.path.join(BASE_PATH, '..', 'images')
 
 app = Flask(__name__)
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 from app import routes
 from app import sockets
